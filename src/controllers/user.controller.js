@@ -50,7 +50,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
     //---------3.check if user already exist:check using username and email-------------
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         //$ symbol is used to use or operator and check for entries in database
         $or: [{ username }, { email }]
     })
@@ -72,6 +72,9 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is required")
     }
+    // else {
+    //     console.log("Avatar file path is uploaded")
+    // }
 
 
 
@@ -79,11 +82,14 @@ const registerUser = asyncHandler(async (req, res) => {
     //-----------------5.upload them to cloudinary, avatar -------------------------------------
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
+    console.log("avatar uploaded on cloudinary");
 
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+    console.log("cover Image uploaded on cloudinary");
+
 
     if (!avatar) {
-        throw new ApiError(400, "Avatar file is required")
+        throw new ApiError(400, "Avatar file is not found")
     }
 
 
