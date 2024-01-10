@@ -22,8 +22,11 @@ const registerUser = asyncHandler(async (req, res) => {
 
     //---------------1. get user details from frontend-------------------
 
-    const { fullname, email, username, password } = req.body
+    const { fullname, email, username, password } = req.body;
     console.log("email: ", email);
+    console.log("password: ", password);
+    console.log("username: ", username);
+    console.log("fullname: ", fullname);
 
 
 
@@ -67,7 +70,14 @@ const registerUser = asyncHandler(async (req, res) => {
     //it may happen that access can be there or not so option chaning: 
 
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    console.log("avatar local path: ", avatarLocalPath);
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path;
+    }
+    console.log("coverImageLocalPath:", coverImageLocalPath)
 
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is required")
@@ -82,14 +92,14 @@ const registerUser = asyncHandler(async (req, res) => {
     //-----------------5.upload them to cloudinary, avatar -------------------------------------
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
-    console.log("avatar uploaded on cloudinary");
+    console.log("avatar uploaded on cloudinary: ", avatar);
 
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-    console.log("cover Image uploaded on cloudinary");
+    console.log("cover Image uploaded on cloudinary: ", coverImage);
 
 
     if (!avatar) {
-        throw new ApiError(400, "Avatar file is not found")
+        throw new ApiError(400, "Avatar file is not found on cloudinary")
     }
 
 
@@ -108,10 +118,10 @@ const registerUser = asyncHandler(async (req, res) => {
 
     //7.-------------checking that user is created or not
     //remove password and refresh token field from response----------------------------------------
-    const createUser = await User.findById(user._id).select("-password -refreshToken");
+    const createdUser = await User.findById(user._id).select("-password -refreshToken");
     //select method  is used in negation way, means we do not want to include password, and refreshtoken so adding them in select with - sign...........
 
-    if (!createUser) {
+    if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registering a user")
     }
 
@@ -120,15 +130,8 @@ const registerUser = asyncHandler(async (req, res) => {
     //8.-----------return response else send error-----------------
 
     return res.status(201).json(
-        new ApiResponse(200, createUser, "User registered Successfully")
+        new ApiResponse(200, createdUser, "User registered Successfully")
     )
-
-
-
-
-
-
-
 
 
 
